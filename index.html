@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kana Master - Hiragana & Katakana Quiz</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --wrong: #ef4444;
+            --border-radius: 16px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+
+        /* Mode Selection Screen */
+        .mode-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 2px solid #e2e8f0;
+            box-shadow: none;
+            margin-top: 20px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f8fafc;
+            color: var(--text-main);
+            transform: none;
+        }
+
+        /* Quiz Screen */
+        .quiz-box {
+            display: none;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .character-display {
+            font-size: 5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--text-main);
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-main);
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background-color: #f0fdf4;
+            background: rgba(79, 70, 229, 0.04);
+        }
+
+        /* Dynamic Feedback Classes */
+        .option-btn.correct {
+            background-color: var(--success) !important;
+            border-color: var(--success) !important;
+            color: white;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--wrong) !important;
+            border-color: var(--wrong) !important;
+            color: white;
+        }
+
+        .disabled {
+            pointer-events: none;
+        }
+
+        .score-counter {
+            background: #e0e7ff;
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="menu-screen" class="mode-selection">
+            <h1>Aishin Education</h1>
+            <h1>Md Shipon Miah</h1>
+            <p class="subtitle">Test your Japanese character skills with your friends!</p>
+            <button class="btn" onclick="startQuiz('hiragana')">Practice Hiragana (ひらがな)</button>
+            <button class="btn" onclick="startQuiz('katakana')">Practice Katakana (カタカナ)</button>
+        </div>
+
+        <div id="quiz-screen" class="quiz-box">
+            <div class="quiz-header">
+                <span id="mode-title">Hiragana Mode</span>
+                <span class="score-counter">Score: <span id="score">0</span></span>
+            </div>
+            
+            <div class="character-display" id="char-display">あ</div>
+
+            <div class="options-grid">
+                <button class="option-btn" onclick="checkAnswer(this)">-</button>
+                <button class="option-btn" onclick="checkAnswer(this)">-</button>
+                <button class="option-btn" onclick="checkAnswer(this)">-</button>
+                <button class="option-btn" onclick="checkAnswer(this)">-</button>
+            </div>
+
+            <button class="btn btn-secondary" onclick="goBack()">Back to Menu</button>
+        </div>
+    </div>
+
+    <script>
+        // Data sets for Hiragana and Katakana
+        const datasets = {
+            hiragana: [
+                { kana: 'あ', romaji: 'a' }, { kana: 'い', romaji: 'i' }, { kana: 'う', romaji: 'u' }, { kana: 'え', romaji: 'e' }, { kana: 'お', romaji: 'o' },
+                { kana: 'か', romaji: 'ka' }, { kana: 'き', romaji: 'ki' }, { kana: 'く', romaji: 'ku' }, { kana: 'け', romaji: 'ke' }, { kana: 'こ', romaji: 'ko' },
+                { kana: 'さ', romaji: 'sa' }, { kana: 'し', romaji: 'shi' }, { kana: 'す', romaji: 'su' }, { kana: 'せ', romaji: 'se' }, { kana: 'そ', romaji: 'so' },
+                { kana: 'た', romaji: 'ta' }, { kana: 'ち', romaji: 'chi' }, { kana: 'つ', romaji: 'tsu' }, { kana: 'て', romaji: 'te' }, { kana: 'と', romaji: 'to' },
+                { kana: 'な', romaji: 'na' }, { kana: 'に', romaji: 'ni' }, { kana: 'ぬ', romaji: 'nu' }, { kana: 'ね', romaji: 'ne' }, { kana: 'の', romaji: 'no' },
+                { kana: 'は', romaji: 'ha' }, { kana: 'ひ', romaji: 'hi' }, { kana: 'ふ', romaji: 'fu' }, { kana: 'へ', romaji: 'he' }, { kana: 'ほ', romaji: 'ho' },
+                { kana: 'ま', romaji: 'ma' }, { kana: 'み', romaji: 'mi' }, { kana: 'む', romaji: 'mu' }, { kana: 'め', romaji: 'me' }, { kana: 'も', romaji: 'mo' },
+                { kana: 'や', romaji: 'ya' }, { kana: 'ゆ', romaji: 'yu' }, { kana: 'よ', romaji: 'yo' },
+                { kana: 'ら', romaji: 'ra' }, { kana: 'り', romaji: 'ri' }, { kana: 'る', romaji: 'ru' }, { kana: 'れ', romaji: 're' }, { kana: 'ろ', romaji: 'ro' },
+                { kana: 'わ', romaji: 'wa' }, { kana: 'を', romaji: 'wo' }, { kana: 'ん', romaji: 'n' }
+            ],
+            katakana: [
+                { kana: 'ア', romaji: 'a' }, { kana: 'イ', romaji: 'i' }, { kana: 'ウ', romaji: 'u' }, { kana: 'エ', romaji: 'e' }, { kana: 'オ', romaji: 'o' },
+                { kana: 'カ', romaji: 'ka' }, { kana: 'キ', romaji: 'ki' }, { kana: 'ク', romaji: 'ku' }, { kana: 'ケ', romaji: 'ke' }, { kana: 'コ', romaji: 'ko' },
+                { kana: 'サ', romaji: 'sa' }, { kana: 'シ', romaji: 'shi' }, { kana: 'ス', romaji: 'su' }, { kana: 'セ', romaji: 'se' }, { kana: 'ソ', romaji: 'so' },
+                { kana: 'タ', romaji: 'ta' }, { kana: 'チ', romaji: 'chi' }, { kana: 'ツ', romaji: 'tsu' }, { kana: 'テ', romaji: 'te' }, { kana: 'ト', romaji: 'to' },
+                { kana: 'ナ', romaji: 'na' }, { kana: 'ニ', romaji: 'ni' }, { kana: 'ヌ', romaji: 'nu' }, { kana: 'ネ', romaji: 'ne' }, { kana: 'ノ', romaji: 'no' },
+                { kana: 'ハ', romaji: 'ha' }, { kana: 'ヒ', romaji: 'hi' }, { kana: 'フ', romaji: 'fu' }, { kana: 'ヘ', romaji: 'he' }, { kana: 'ホ', romaji: 'ho' },
+                { kana: 'マ', romaji: 'ma' }, { kana: 'ミ', romaji: 'mi' }, { kana: 'ム', romaji: 'mu' }, { kana: 'メ', romaji: 'me' }, { kana: 'モ', romaji: 'mo' },
+                { kana: 'ヤ', romaji: 'ya' }, { kana: 'ユ', romaji: 'yu' }, { kana: 'ヨ', romaji: 'yo' },
+                { kana: 'ラ', romaji: 'ra' }, { kana: 'リ', romaji: 'ri' }, { kana: 'ル', romaji: 'ru' }, { kana: 'レ', romaji: 're' }, { kana: 'ロ', romaji: 'ro' },
+                { kana: 'ワ', romaji: 'wa' }, { kana: 'ヲ', romaji: 'wo' }, { kana: 'ン', romaji: 'n' }
+            ]
+        };
+
+        let currentMode = 'hiragana';
+        let currentQuestion = null;
+        let score = 0;
+
+        const menuScreen = document.getElementById('menu-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const modeTitle = document.getElementById('mode-title');
+        const charDisplay = document.getElementById('char-display');
+        const scoreDisplay = document.getElementById('score');
+        const optionButtons = document.querySelectorAll('.option-btn');
+
+        function startQuiz(mode) {
+            currentMode = mode;
+            score = 0;
+            scoreDisplay.textContent = score;
+            modeTitle.textContent = mode === 'hiragana' ? 'Hiragana Mode (ひらがな)' : 'Katakana Mode (カタカナ)';
+            
+            menuScreen.style.display = 'none';
+            quizScreen.style.display = 'block';
+            
+            generateQuestion();
+        }
+
+        function goBack() {
+            menuScreen.style.display = 'flex';
+            quizScreen.style.display = 'none';
+        }
+
+        function generateQuestion() {
+            const currentSet = datasets[currentMode];
+            
+            // Pick a random main character
+            const randomIndex = Math.floor(Math.random() * currentSet.length);
+            currentQuestion = currentSet[randomIndex];
+            
+            charDisplay.textContent = currentQuestion.kana;
+
+            // Generate 3 wrong options
+            let options = [currentQuestion.romaji];
+            while (options.length < 4) {
+                const randomWrong = currentSet[Math.floor(Math.random() * currentSet.length)].romaji;
+                if (!options.includes(randomWrong)) {
+                    options.push(randomWrong);
+                }
+            }
+
+            // Shuffle the options array so the correct answer isn't always first
+            options.sort(() => Math.random() - 0.5);
+
+            // Assign options to buttons & reset states
+            optionButtons.forEach((button, index) => {
+                button.textContent = options[index];
+                button.className = 'option-btn'; // Clears 'correct' or 'wrong' styles
+            });
+        }
+
+        function checkAnswer(selectedButton) {
+            // Disable buttons temporarily to prevent double clicking
+            optionButtons.forEach(btn => btn.classList.add('disabled'));
+
+            if (selectedButton.textContent === currentQuestion.romaji) {
+                selectedButton.classList.add('correct');
+                score++;
+                scoreDisplay.textContent = score;
+            } else {
+                selectedButton.classList.add('wrong');
+                // Show the correct one alongside the wrong one
+                optionButtons.forEach(btn => {
+                    if (btn.textContent === currentQuestion.romaji) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            // Move to next question after 1 second
+            setTimeout(() => {
+                generateQuestion();
+                optionButtons.forEach(btn => btn.classList.remove('disabled'));
+            }, 1000);
+        }
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kana Master - Hiragana & Katakana Quiz</title>
+    <style>
+        :root {
+            --bg-color: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --success: #10b981;
+            --wrong: #ef4444;
+            --border-radius: 16px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: background 0.3s ease;
+        }
+
+        /* Creative Student / Creator Header Badge */
+        .creator-badge {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 25px;
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .creator-badge::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .creator-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+
+        .creator-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            color: #e2e8f0;
+            margin-bottom: 4px;
+        }
+
+        .creator-institution {
+            font-size: 0.85rem;
+            opacity: 0.85;
+            font-style: italic;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            color: var(--text-main);
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 24px;
+        }
+
+        /* Mode Selection Screen */
+        .mode-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2);
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--text-muted);
+            border: 2px solid #e2e8f0;
+            box-shadow: none;
+            margin-top: 20px;
+        }
+
+        .btn-secondary:hover {
+            background-color: #f8fafc;
+            color: var(--text-main);
+            transform: none;
+        }
+
+        /* Quiz Screen */
+        .quiz-box {
+            display: none;
+        }
+
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .character-display {
+            font-size: 5rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: var(--text-main);
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 14px;
+            margin-bottom: 20px;
+        }
+
+        .option-btn {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-main);
+        }
+
+        .option-btn:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.04);
+        }
+
+        /* Dynamic Feedback Classes */
+        .option-btn.correct {
+            background-color: var(--success) !important;
+            border-color: var(--success) !important;
+            color: white;
+        }
+
+        .option-btn.wrong {
+            background-color: var(--wrong) !important;
+            border-color: var(--wrong) !important;
+            color: white;
+        }
+
+        .disabled {
+            pointer-events: none;
+        }
+
+        .score-counter {
+            background: #e0e7ff;
+            color: var(--primary);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="creator-badge">
+        <div class="creator-name">Md Shipon Miah</div>
+        <div class="creator-title">Student</div>
+        <div class="creator-institution">Aishin Education, Bhulta Branch</div>
+    </div>
+
+    <div class="container">
+        <div id="menu-screen" class="mode-selection">
+            <h1>Kana Master 💡</h1>
+            <p class="subtitle">Test your Japanese character skills with your friends!</p>
+            <button class="btn" onclick="startQuiz('hiragana')">Practice Hiragana (ひらがな)</button>
+            <button class="btn" onclick="startQuiz('katakana')">Practice Katakana (カタカナ)</button>
+        </div>
+
+        <div id="quiz-screen" class="quiz-box">
+            <div class="quiz-header">
+                <span id="mode-title">Hiragana Mode</span>
+                <span class="score-counter">Score: <span id="score">0</span></span>
+            </div>
+            
+            <div class="character-display" id="char-display">あ</div>
+
+            <div class="options-grid">
+                <button class="option-btn" onclick="checkAnswer(this)">-</button>
+                <button class="option-btn" onclick="checkAnswer(this)">-</button>
+                <button class="option-btn" onclick="checkAnswer(this)">-</button>
+                <button class="option-btn" onclick="checkAnswer(this)">-</button>
+            </div>
+
+            <button class="btn btn-secondary" onclick="goBack()">Back to Menu</button>
+        </div>
+    </div>
+
+    <script>
+        const datasets = {
+            hiragana: [
+                { kana: 'あ', romaji: 'a' }, { kana: 'い', romaji: 'i' }, { kana: 'う', romaji: 'u' }, { kana: 'え', romaji: 'e' }, { kana: 'お', romaji: 'o' },
+                { kana: 'か', romaji: 'ka' }, { kana: 'き', romaji: 'ki' }, { kana: 'く', romaji: 'ku' }, { kana: 'け', romaji: 'ke' }, { kana: 'こ', romaji: 'ko' },
+                { kana: 'さ', romaji: 'sa' }, { kana: 'し', romaji: 'shi' }, { kana: 'す', romaji: 'su' }, { kana: 'せ', romaji: 'se' }, { kana: 'そ', romaji: 'so' },
+                { kana: 'た', romaji: 'ta' }, { kana: 'ち', romaji: 'chi' }, { kana: 'つ', romaji: 'tsu' }, { kana: 'て', romaji: 'te' }, { kana: 'と', romaji: 'to' },
+                { kana: 'な', romaji: 'na' }, { kana: 'に', romaji: 'ni' }, { kana: 'ぬ', romaji: 'nu' }, { kana: 'ね', romaji: 'ne' }, { kana: 'の', romaji: 'no' },
+                { kana: 'は', romaji: 'ha' }, { kana: 'ひ', romaji: 'hi' }, { kana: 'ふ', romaji: 'fu' }, { kana: 'へ', romaji: 'he' }, { kana: 'ほ', romaji: 'ho' },
+                { kana: 'ま', romaji: 'ma' }, { kana: 'み', romaji: 'mi' }, { kana: 'む', romaji: 'mu' }, { kana: 'め', romaji: 'me' }, { kana: 'も', romaji: 'mo' },
+                { kana: 'や', romaji: 'ya' }, { kana: 'ゆ', romaji: 'yu' }, { kana: 'よ', romaji: 'yo' },
+                { kana: 'ら', romaji: 'ra' }, { kana: 'り', romaji: 'ri' }, { kana: 'る', romaji: 'ru' }, { kana: 'れ', romaji: 're' }, { kana: 'ろ', romaji: 'ro' },
+                { kana: 'わ', romaji: 'wa' }, { kana: 'を', romaji: 'wo' }, { kana: 'ん', romaji: 'n' }
+            ],
+            katakana: [
+                { kana: 'ア', romaji: 'a' }, { kana: 'イ', romaji: 'i' }, { kana: 'ウ', romaji: 'u' }, { kana: 'エ', romaji: 'e' }, { kana: 'オ', romaji: 'o' },
+                { kana: 'カ', romaji: 'ka' }, { kana: 'キ', romaji: 'ki' }, { kana: 'ク', romaji: 'ku' }, { kana: 'ケ', romaji: 'ke' }, { kana: 'コ', romaji: 'ko' },
+                { kana: 'サ', romaji: 'sa' }, { kana: 'シ', romaji: 'shi' }, { kana: 'ス', romaji: 'su' }, { kana: 'セ', romaji: 'se' }, { kana: 'ソ', romaji: 'so' },
+                { kana: 'タ', romaji: 'ta' }, { kana: 'チ', romaji: 'chi' }, { kana: 'ツ', romaji: 'tsu' }, { kana: 'テ', romaji: 'te' }, { kana: 'ト', romaji: 'to' },
+                { kana: 'ナ', romaji: 'na' }, { kana: 'ニ', romaji: 'ni' }, { kana: 'ヌ', romaji: 'nu' }, { kana: 'ネ', romaji: 'ne' }, { kana: 'ノ', romaji: 'no' },
+                { kana: 'ハ', romaji: 'ha' }, { kana: 'ヒ', romaji: 'hi' }, { kana: 'フ', romaji: 'fu' }, { kana: 'ヘ', romaji: 'he' }, { kana: 'ホ', romaji: 'ho' },
+                { kana: 'マ', romaji: 'ma' }, { kana: 'み', romaji: 'mi' }, { kana: 'ム', romaji: 'mu' }, { kana: 'メ', romaji: 'me' }, { kana: 'モ', romaji: 'mo' },
+                { kana: 'ヤ', romaji: 'ya' }, { kana: 'ユ', romaji: 'yu' }, { kana: 'ヨ', romaji: 'yo' },
+                { kana: 'ラ', romaji: 'ra' }, { kana: 'リ', romaji: 'ri' }, { kana: 'ル', romaji: 'ru' }, { kana: 'レ', romaji: 're' }, { kana: 'ロ', romaji: 'ro' },
+                { kana: 'ワ', romaji: 'wa' }, { kana: 'ヲ', romaji: 'wo' }, { kana: 'ン', romaji: 'n' }
+            ]
+        };
+
+        let currentMode = 'hiragana';
+        let currentQuestion = null;
+        let score = 0;
+
+        const menuScreen = document.getElementById('menu-screen');
+        const quizScreen = document.getElementById('quiz-screen');
+        const modeTitle = document.getElementById('mode-title');
+        const charDisplay = document.getElementById('char-display');
+        const scoreDisplay = document.getElementById('score');
+        const optionButtons = document.querySelectorAll('.option-btn');
+
+        function startQuiz(mode) {
+            currentMode = mode;
+            score = 0;
+            scoreDisplay.textContent = score;
+            modeTitle.textContent = mode === 'hiragana' ? 'Hiragana Mode (ひらがな)' : 'Katakana Mode (カタカナ)';
+            
+            menuScreen.style.display = 'none';
+            quizScreen.style.display = 'block';
+            
+            generateQuestion();
+        }
+
+        function goBack() {
+            menuScreen.style.display = 'flex';
+            quizScreen.style.display = 'none';
+        }
+
+        function generateQuestion() {
+            const currentSet = datasets[currentMode];
+            const randomIndex = Math.floor(Math.random() * currentSet.length);
+            currentQuestion = currentSet[randomIndex];
+            
+            charDisplay.textContent = currentQuestion.kana;
+
+            let options = [currentQuestion.romaji];
+            while (options.length < 4) {
+                const randomWrong = currentSet[Math.floor(Math.random() * currentSet.length)].romaji;
+                if (!options.includes(randomWrong)) {
+                    options.push(randomWrong);
+                }
+            }
+
+            options.sort(() => Math.random() - 0.5);
+
+            optionButtons.forEach((button, index) => {
+                button.textContent = options[index];
+                button.className = 'option-btn';
+            });
+        }
+
+        function checkAnswer(selectedButton) {
+            optionButtons.forEach(btn => btn.classList.add('disabled'));
+
+            if (selectedButton.textContent === currentQuestion.romaji) {
+                selectedButton.classList.add('correct');
+                score++;
+                scoreDisplay.textContent = score;
+            } else {
+                selectedButton.classList.add('wrong');
+                optionButtons.forEach(btn => {
+                    if (btn.textContent === currentQuestion.romaji) {
+                        btn.classList.add('correct');
+                    }
+                });
+            }
+
+            setTimeout(() => {
+                generateQuestion();
+                optionButtons.forEach(btn => btn.classList.remove('disabled'));
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
